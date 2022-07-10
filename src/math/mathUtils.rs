@@ -1,5 +1,5 @@
 ﻿use std::ops::{Add, Mul};
-use glm::{dot, min, normalize, sqrt, Vec3, vec3, Vec4};
+use glm::{dot, min, normalize, sqrt, to_vec3, Vec3, vec3, Vec4};
 use rand::{Rng, thread_rng};
 
 
@@ -60,3 +60,12 @@ pub fn refract(uv: &Vec3, n: &Vec3, etaiOverEtat: &f32) -> Vec3 {
     return rOutParallel + rOutPersp;
 }
 
+pub fn randomInUnitDisk() -> Vec3 {
+    loop {
+        let p: Vec3 = vec3(thread_rng().gen_range(-1.0..1.0),thread_rng().gen_range(-1.0..1.0),0.0 );
+        if vectorLengthSquared(&p) >= 1.0 {
+            continue;
+        }
+        return p;
+    }
+}

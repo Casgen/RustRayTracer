@@ -2,7 +2,7 @@ use std::borrow::Borrow;
 use std::rc::Rc;
 use std::thread;
 use std::thread::{JoinHandle, Thread};
-use glm::{IVec2, vec3};
+use glm::{IVec2, length, vec3, Vec3};
 use sfml::graphics::{Color, Image, RenderTarget, RenderWindow, Sprite, Text, Texture};
 use sfml::window::event::Event;
 use sfml::window::{ContextSettings, VideoMode, WindowStyle};
@@ -53,7 +53,11 @@ fn main() {
     ];
 
     let img: Image = Image::new(resolution.x as u32, resolution.y as u32).unwrap();
-    let cam: Camera = Camera::new(resolution.x, resolution.y);
+
+    let camPos: Vec3 = vec3(0.5,0.5,-1.0);
+    let lookAt: Vec3 = vec3(1.0,0.0,0.0);
+
+    let cam: Camera = Camera::new(camPos,lookAt,resolution.x, resolution.y, 0.1, length(lookAt-camPos));
 
     let scene: Scene = Scene::new(cam, objects);
 

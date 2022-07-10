@@ -7,9 +7,7 @@ use crate::render::camera::Camera;
 
 pub struct Scene {
     cam: Camera,
-    modelMat: Mat4,
     hittableObjects: Vec<Box<dyn HittableObject>>,
-    
     tMax: f32,
     tMin: f32
 }
@@ -54,16 +52,10 @@ impl Default for Scene {
     fn default() -> Self {
        return Self {
            cam: Camera::default(),
-           modelMat: mat4(
-               1.0, 0.0, 0.0, 0.0,
-               0.0, 1.0, 0.0, 0.0,
-               0.0, 0.0, 1.0, 0.0,
-               0.0, 0.0, 0.0, 1.0,
-           ),
            hittableObjects: vec![],
            tMax: f32::MAX,
            tMin: 0.001
-       } 
+       }
     }
 }
 /*

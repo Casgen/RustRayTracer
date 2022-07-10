@@ -1,6 +1,7 @@
 ﻿use std::f32::consts::PI;
-use glm::{cos, cross, IVec4, ivec4, mat4, Mat4, normalize, radians, sin, vec3, Vec3, Vec4, vec4};
+use glm::{cos, cross, IVec4, ivec4, mat4, Mat4, normalize, radians, sin, tan, vec3, Vec3, Vec4, vec4};
 use glm::ext::{look_at, perspective};
+use crate::math::mathUtils::randomInUnitDisk;
 use crate::math::ray::Ray;
 
 pub struct Camera {
@@ -9,90 +10,83 @@ pub struct Camera {
     upVector: Vec3,
     sideVector: Vec3,
 
-    viewPort: IVec4,
-    viewMat: Mat4,
-    modelMat: Mat4,
-    projMatPersp: Mat4,
+    lensRadius: f32,
 
-    azimuth: f32,
-    zenith: f32,
+    horizontal: Vec3,
+    vertical: Vec3,
+    lowerLeftCorner: Vec3,
 
 }
 
 
 impl Camera {
-    pub fn new(width: i32, height: i32) -> Camera {
-        let mut cam: Camera = Camera {
-            viewPort: ivec4(0, 0, width, height),
-            projMatPersp: perspective::<f32>(radians(45.0), width as f32 / height as f32, 0.1, 100.0),
-            ..Default::default()
+    pub fn new(position: Vec3, lookAt: Vec3, width: i32, height: i32, aperture: f32, focusDist: f32) -> Camera {
+
+        let aspectRatio: f32 = width as f32 / height as f32;
+        let theta: f32 = radians(45.0);
+        let h: f32 = tan(theta/2.0);
+
+        let vwHeight: f32 = 2.0 * h;
+        let vwWidth: f32 = aspectRatio * vwHeight;
+
+        let viewDirection: Vec3 = normalize(position - lookAt);
+        let sideVector: Vec3 = normalize(cross(vec3(0.0,0.0,0.1), viewDirection));
+        let upVector: Vec3 = cross(viewDirection, sideVector);
+
+        let horizontal: Vec3 = sideVector * vwWidth * focusDist;
+        let vertical: Vec3 = upVector * vwHeight * focusDist;
+
+        return Camera {
+            horizontal,
+            vertical,
+            lowerLeftCorner: position - horizontal/2.0 - vertical/2.0 - viewDirection * focusDist,
+            viewDirection,
+            upVector,
+            sideVector,
+            eyePosition: position,
+            lensRadius: aperture / 2.0,
         };
-        
-        cam.calculateAndSetUpVectors();
-        cam.calculateAndSetViewTransform();
-        return cam;
     }
 
-    fn calculateAndSetUpVectors(&mut self) {
-        self.viewDirection = vec3(cos(self.azimuth) * cos(self.zenith),
-                                  sin(self.azimuth) * cos(self.zenith),
-                                  sin(self.zenith));
-
-        self.upVector = vec3(cos(self.azimuth) * cos(self.zenith + PI / 2.0),
-                             sin(self.azimuth) * cos(self.zenith + PI / 2.0),
-                             sin(self.zenith + PI / 2.0));
-        self.sideVector = cross(self.viewDirection, self.upVector);
-    }
-
-    fn calculateAndSetViewTransform(&mut self) {
-        self.viewMat = look_at(self.eyePosition, self.viewDirection, self.upVector);
-    }
-    
-    pub fn unProject(&self, coords: &Vec3) -> Vec3 {
-        
-        let inverse: Mat4 = glm::inverse(&(self.projMatPersp * self.modelMat * self.viewMat));
-        
-        let mut tmp: Vec4 = vec4(coords.x,coords.y,coords.z, 1.0);
-        
-        tmp.x = (tmp.x - self.viewPort[0] as f32) / self.viewPort[2] as f32;
-        tmp.y = (tmp.y - self.viewPort[1] as f32) / self.viewPort[3] as f32;
-        tmp = tmp * 2.0 - 1.0;
-        
-        let mut obj: Vec4 = inverse * tmp;
-        
-        obj = obj / obj.w;
-        
-        return vec3(obj.x,obj.y,obj.z);
-    }
 
     pub fn createARay(&self, x: f32, y: f32) -> Ray {
-        return Ray::new(self.eyePosition, normalize(self.unProject(&vec3(x as f32, y as f32,0.1))));
+
+        let rd: Vec3 = randomInUnitDisk() * self.lensRadius;
+        let offset: Vec3 = self.upVector * rd.x + self.sideVector * rd.y;
+
+        return Ray::new(self.eyePosition + offset,  self.lowerLeftCorner + self.horizontal * x + self.vertical * y - self.eyePosition - offset);
     }
     
 }
 
 impl Default for Camera {
     fn default() -> Self {
-        let eyeVec: Vec3 = vec3(0.0, 0.0, 0.0);
-        let viewVec: Vec3 = vec3(1.0, 0.0, 0.0);
-        let upVec: Vec3 = vec3(0.0, 0.0, 1.0);
+        let aspectRatio: f32 = 800.0 as f32 / 600.0 as f32;
+        let theta: f32 = radians(45.0);
+        let h: f32 = tan(theta/2.0);
+
+        let position: Vec3 = vec3(0.0,0.0,0.0);
+        let aperture: f32 = 0.6;
+
+        let vwHeight: f32 = 2.0 * h;
+        let vwWidth: f32 = aspectRatio * vwHeight;
+
+        let viewDirection: Vec3 = normalize( position - vec3(1.0,0.0,0.0));
+        let sideVector: Vec3 = normalize(cross(vec3(0.0,0.0,0.1), viewDirection));
+        let upVector: Vec3 = cross(viewDirection, sideVector);
+
+        let horizontal: Vec3 = sideVector * vwWidth * 1.0;
+        let vertical: Vec3 = upVector * vwHeight * 1.0;
 
         return Camera {
-            viewMat: look_at(eyeVec, viewVec, upVec),
-            eyePosition: eyeVec,
-            viewDirection: viewVec,
-            upVector: upVec,
-            sideVector: vec3(0.0, -1.0, 0.0),
-            viewPort: ivec4(0, 0, 800, 600),
-            projMatPersp: perspective::<f32>(radians(45.0), 800.0 / 600.0, 0.1, 100.0),
-            modelMat: mat4(
-                1.0, 0.0, 0.0, 0.0,
-                0.0, 1.0, 0.0, 0.0,
-                0.0, 0.0, 1.0, 0.0,
-                0.0, 0.0, 0.0, 1.0,
-            ),
-            azimuth: 0.0,
-            zenith: 0.0,
+            horizontal,
+            vertical,
+            lowerLeftCorner: position - horizontal/2.0 - vertical/2.0 - viewDirection * viewDirection,
+            viewDirection,
+            upVector,
+            sideVector,
+            eyePosition: position,
+            lensRadius: aperture / 2.0,
         };
     }
 }
@@ -104,12 +98,10 @@ impl Clone for Camera {
             viewDirection: self.viewDirection.clone(),
             upVector: self.upVector.clone(),
             sideVector: self.sideVector.clone(),
-            viewPort: self.viewPort.clone(),
-            viewMat: self.viewMat.clone(),
-            modelMat: self.modelMat.clone(),
-            projMatPersp: self.projMatPersp.clone(),
-            azimuth: self.azimuth,
-            zenith: self.zenith
+            lensRadius: self.lensRadius.clone(),
+            vertical: self.vertical.clone(),
+            horizontal: self.horizontal.clone(),
+            lowerLeftCorner: self.lowerLeftCorner.clone(),
         }
     }
 }
