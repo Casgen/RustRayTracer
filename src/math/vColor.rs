@@ -1,5 +1,6 @@
-﻿use std::ops::{Add, AddAssign, Div, Mul};
+﻿use std::ops::{Add, AddAssign, Div, Mul, Range};
 use glm::{clamp, Vec3, vec3, vec4, Vec4};
+use rand::{Rng, thread_rng};
 use sfml::graphics::Color;
 
 pub struct VColor {
@@ -16,11 +17,11 @@ impl VColor {
                 1.0)
         };
     }
-    
+
     pub fn new_vec4(vec: &Vec4) -> Self {
         return Self {
             color: vec.clone()
-        }
+        };
     }
 
     pub fn new_rgb(r: f32, g: f32, b: f32) -> Self {
@@ -49,9 +50,32 @@ impl VColor {
         return Color::new_rgba(
             (self.color.x * 255.0) as u8,
             (self.color.y * 255.0) as u8,
-             (self.color.z * 255.0) as u8,
-              (self.color.w * 255.0) as u8,
+            (self.color.z * 255.0) as u8,
+            (self.color.w * 255.0) as u8,
         );
+    }
+
+
+    pub fn random_ran(ran: Range<f32>) -> Self {
+        return Self {
+            color: vec4(
+                thread_rng().gen_range(ran.clone()),
+                thread_rng().gen_range(ran.clone()),
+                thread_rng().gen_range(ran.clone()),
+                thread_rng().gen_range(ran.clone()),
+            )
+        };
+    }
+
+    pub fn random() -> Self {
+        return Self {
+            color: vec4(
+                thread_rng().gen(),
+                thread_rng().gen(),
+                thread_rng().gen(),
+                thread_rng().gen(),
+            )
+        };
     }
 }
 
@@ -60,7 +84,7 @@ impl Add<VColor> for VColor {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self {
-        return VColor{ color: self.color + rhs.color }
+        return VColor { color: self.color + rhs.color };
     }
 }
 
@@ -68,7 +92,7 @@ impl Div<VColor> for VColor {
     type Output = Self;
 
     fn div(self, rhs: Self) -> Self::Output {
-        return VColor { color: self.color / rhs.color}
+        return VColor { color: self.color / rhs.color };
     }
 }
 
@@ -76,7 +100,7 @@ impl Mul<VColor> for VColor {
     type Output = Self;
 
     fn mul(self, rhs: Self) -> Self {
-        return VColor { color: self.color * rhs.color }
+        return VColor { color: self.color * rhs.color };
     }
 }
 
@@ -90,7 +114,7 @@ impl Mul<f32> for VColor {
     type Output = Self;
 
     fn mul(self, rhs: f32) -> Self {
-        return VColor { color: self.color * rhs }
+        return VColor { color: self.color * rhs };
     }
 }
 
@@ -98,7 +122,7 @@ impl Div<i32> for VColor {
     type Output = VColor;
 
     fn div(self, rhs: i32) -> Self::Output {
-        return VColor { color: self.color / rhs as f32}
+        return VColor { color: self.color / rhs as f32 };
     }
 }
 
@@ -115,8 +139,8 @@ impl Default for VColor {
 
 impl Clone for VColor {
     fn clone(&self) -> Self {
-        return VColor{
+        return VColor {
             color: self.color
-        }
+        };
     }
 }

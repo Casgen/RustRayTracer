@@ -30,36 +30,16 @@ fn main() {
         bits_per_pixel: 8,
     }, "SFML WORKS!", WindowStyle::default(), &ContextSettings::default()).unwrap();
 
-    let sphereLamb: Sphere = Sphere::new(0.15, vec3(1.0, 0.0, 0.0), Rc::new(
-        Lambertian::new(VColor::new_rgb(0.0, 0.7, 0.7))
-    ));
-    let sphereMetal: Sphere = Sphere::new(0.15, vec3(1.0, 0.3, 0.0), Rc::new(
-        Metal::new(VColor::new_rgb(0.156, 0.8, 0.214), 0.0)
-    ));
-
-    let sphereDielectric: Sphere = Sphere::new(0.15, vec3(1.0, -0.3, 0.0), Rc::new(
-        Dielectric::new(1.5)
-    ));
-
-    let sphereBottom: Sphere = Sphere::new(3.0, vec3(1.0, 0.0, 3.2), Rc::new(
-        Lambertian::new(VColor::new_rgb(0.8,0.8,0.0))
-    ));
-
-    let objects: Vec<Box<dyn HittableObject>> = vec![
-        Box::new(sphereLamb),
-        Box::new(sphereMetal),
-        Box::new(sphereDielectric),
-        Box::new(sphereBottom)
-    ];
 
     let img: Image = Image::new(resolution.x as u32, resolution.y as u32).unwrap();
 
-    let camPos: Vec3 = vec3(0.5,0.5,-1.0);
-    let lookAt: Vec3 = vec3(1.0,0.0,0.0);
+    let camPos: Vec3 = vec3(13.0,-2.0,-2.0);
+    let lookAt: Vec3 = vec3(0.0,0.0,0.0);
 
-    let cam: Camera = Camera::new(camPos,lookAt,resolution.x, resolution.y, 0.1, length(lookAt-camPos));
+    let cam: Camera = Camera::new(camPos,lookAt,resolution.x, resolution.y, 0.1, 10.0, 20.0);
 
-    let scene: Scene = Scene::new(cam, objects);
+    let mut scene: Scene = Scene::randomScene();
+    scene.setCam(cam);
 
     let mut renderer: Renderer = Renderer::new(scene, &resolution, img);
 
