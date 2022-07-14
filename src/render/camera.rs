@@ -20,10 +20,10 @@ pub struct Camera {
 
 
 impl Camera {
-    pub fn new(position: Vec3, lookAt: Vec3, width: i32, height: i32, aperture: f32, focusDist: f32) -> Camera {
+    pub fn new(position: Vec3, lookAt: Vec3, width: i32, height: i32, aperture: f32, focusDist: f32, fov: f32) -> Camera {
 
         let aspectRatio: f32 = width as f32 / height as f32;
-        let theta: f32 = radians(45.0);
+        let theta: f32 = radians(fov);
         let h: f32 = tan(theta/2.0);
 
         let vwHeight: f32 = 2.0 * h;

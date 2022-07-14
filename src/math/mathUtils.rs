@@ -53,6 +53,16 @@ pub fn randomUnitVector3() -> Vec3 {
     return norm;
 }
 
+pub fn randomInHemisphere(n: &Vec3) -> Vec3 {
+    let randInUnitSphere: Vec3 = randomInUnitSphere();
+
+    if dot(randInUnitSphere, *n) > 0.0 {
+        return randInUnitSphere;
+    }
+
+    return -randInUnitSphere;
+}
+
 pub fn refract(uv: &Vec3, n: &Vec3, etaiOverEtat: &f32) -> Vec3 {
     let cosTheta: f32 = f32::min(dot( -*uv,*n), 1.0);
     let rOutPersp: Vec3 = (*uv + *n * cosTheta) * *etaiOverEtat;

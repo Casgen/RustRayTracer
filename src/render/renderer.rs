@@ -3,6 +3,7 @@ use glm::{IVec2, IVec4, ivec4, normalize, Vec3};
 use rand::{Rng, thread_rng};
 use sfml::graphics::Image;
 use crate::Camera;
+use crate::math::mathUtils::randomInHemisphere;
 use crate::math::ray::Ray;
 use crate::math::vColor::VColor;
 use crate::model::hitRecord::HitRecord;
@@ -38,6 +39,7 @@ impl Renderer {
             let mut scattered: Ray = Ray::default();
             let mut attenuation: VColor = VColor::default();
             if hitRecord.material.scatter(ray, &hitRecord, &mut attenuation, &mut scattered) {
+                let target: Vec3 = hitRecord.point + randomInHemisphere(&hitRecord.normal);
                 return attenuation * self.colorRay(x, y, &scattered, depth - 1);
             }
             return VColor::default();
@@ -59,11 +61,6 @@ impl Renderer {
                     let ray: Ray = self.scene.getCamera().createARay((x as f32 + thread_rng().gen_range(0.0..1.0) as f32)  / (self.viewPort.z - 1) as f32
                                                                      , (y as f32 + thread_rng().gen_range(0.0..1.0) as f32) / (self.viewPort.w - 1) as f32);
 
-                    if x == 0 && y == 0 { println!("LowerLeft: {}, {}, {}", ray.direction.x, ray.direction.y, ray.direction.z) };
-                    if x == 799 && y == 0 { println!("LowerRight: {}, {}, {}", ray.direction.x, ray.direction.y, ray.direction.z) };
-                    if x == 0 && y == 599 { println!("UpperLeft: {}, {}, {}", ray.direction.x, ray.direction.y, ray.direction.z) };
-                    if x == 799 && y == 599 { println!("UpperRight: {}, {}, {}", ray.direction.x, ray.direction.y, ray.direction.z) };
-
                     num += self.colorRay(x, y, &ray, self.rayRecursionDepth);
                 }
 
@@ -78,9 +75,9 @@ impl Default for Renderer {
     fn default() -> Self {
         return Self {
             scene: Scene::new(Camera::default(), vec![]),
-            sampling: 16,
+            sampling: 32,
             imageBuffer: Image::new(800, 600).unwrap(),
-            rayRecursionDepth: 8,
+            rayRecursionDepth: 16,
             viewPort: ivec4(0, 0, 800, 600),
         };
     }
